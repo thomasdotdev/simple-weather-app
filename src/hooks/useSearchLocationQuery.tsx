@@ -6,7 +6,7 @@ export function useSearchLocationQuery(debounceSearch: string) {
     queryKey: ["search", debounceSearch],
     queryFn: async () => {
       const response = await fetch(
-        `http://api.openweathermap.org/geo/1.0/direct?q=${debounceSearch}&limit=5&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${debounceSearch}&limit=5&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}`
       );
       const data = await response.json();
 

@@ -12,7 +12,7 @@ export function useNext5DaysWeatherForecastQuery() {
     queryKey: ["next5DayWeatherForecast", lat, lon],
     queryFn: async () => {
       const response = await fetch(
-        `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}&units=metric`
       );
       const data = await response.json();
       return data as Next5DayWeatherForecastData;

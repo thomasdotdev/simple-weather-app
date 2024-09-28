@@ -52,8 +52,12 @@ export const useLocationStore = create<LocationStore>()(
       currentLocation: defaultLocation,
       setCurrentLocation: (location) => set({ currentLocation: location }),
       history: [],
-      addToHistory: (location) =>
-        set({ history: [location, ...get().history] }),
+      addToHistory: (location) => {
+        const oldHistory = get().history.filter(
+          (item) => item.lat !== location.lat && item.lon !== location.lon
+        );
+        set({ history: [location, ...oldHistory] });
+      },
       removeFromHistory: (location) =>
         set({
           history: get().history.filter(

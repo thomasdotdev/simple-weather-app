@@ -18,5 +18,6 @@ export function useCurrentWeatherQuery() {
     },
     enabled: !!lat && !!lon,
     placeholderData: keepPreviousData,
+    throwOnError: true,
   });
 }

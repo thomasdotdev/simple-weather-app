@@ -62,14 +62,14 @@ export default function SearchBar() {
           </span>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[480px] p-2 bg-white outline-none"
+          className="w-[min(100vw-16px,480px)] p-2 bg-white outline-none"
           sideOffset={-20}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {data?.map((item, index) => (
             <button
               key={index}
-              className="p-2 w-full hover:bg-accent rounded-sm outline-[transparent] flex"
+              className="p-2 w-full hover:bg-accent rounded-sm outline-[transparent] flex truncate"
               onClick={() => handleSearch(item)}
             >
               {item.name}, {item.country}

@@ -50,5 +50,6 @@ export function useNext5DaysWeatherForecastQuery() {
 
       return listWithDateSeparated;
     },
+    throwOnError: true,
   });
 }

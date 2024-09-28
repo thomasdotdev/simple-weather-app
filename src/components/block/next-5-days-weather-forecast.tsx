@@ -88,8 +88,8 @@ export default function Next5DayWeatherForecast() {
                   <WeatherForcastRow
                     key={index}
                     time={timeFormatter.format(new Date(payload.dt * 1000))}
-                    minTemp={`${payload.main?.temp_min}`}
-                    maxTemp={`${payload.main?.temp_max}`}
+                    minTemp={`${Math.round(payload.main?.temp_min)}`}
+                    maxTemp={`${Math.round(payload.main?.temp_max)}`}
                     condition={payload.weather[0]?.description ?? ""}
                     icon={
                       <WeatherIcon

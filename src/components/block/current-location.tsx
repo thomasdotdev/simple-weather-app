@@ -5,5 +5,9 @@ import { ComponentProps } from "react";
 
 export default function CurrentLocation(props: ComponentProps<"span">) {
   const { currentLocation } = useLocationStore();
-  return <span {...props}>{currentLocation.name}</span>;
+  return (
+    <span {...props}>
+      {currentLocation.name}, {currentLocation.country}
+    </span>
+  );
 }

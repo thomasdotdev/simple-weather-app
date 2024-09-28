@@ -13,7 +13,7 @@ export default function WeatherIcon({
   ...props
 }: WeatherIconProps) {
   return (
-    <div className="grid place-items-center">
+    <div className="grid place-content-center">
       <Image
         src={`https://openweathermap.org/img/wn/${icon}@2x.png`}
         alt={name}

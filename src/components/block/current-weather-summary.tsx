@@ -2,28 +2,23 @@
 
 import React from "react";
 
+import { useCurrentWeatherQuery } from "@/hooks/useCurrentWeatherQuery";
+import { longDateFormatter } from "@/utils/datetime";
+import { ArrowDown } from "lucide-react";
 import { Card, CardContent, CardFooter } from "../ui/card";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useLocationStore } from "@/store/location";
-import { WeatherData } from "@/types/api";
 import WeatherIcon from "./weather-icon";
-
-const dateformatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+import { Skeleton } from "../ui/skeleton";
 
 function CurrentWeatherCondition({
   temp,
   condition,
 }: {
-  temp: number;
-  condition: string;
+  temp: React.ReactNode;
+  condition: React.ReactNode;
 }) {
   return (
-    <div className="grid text-center gap-2">
-      <span className="text-5xl font-medium">{temp}°C</span>
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-5xl font-medium">{temp}</span>
       <span className="text-lg font-medium capitalize">{condition}</span>
     </div>
   );
@@ -34,10 +29,10 @@ function CurrentWeatherIndicator({
   value,
 }: {
   name: string;
-  value: string;
+  value: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2 text-center col-span-1">
+    <div className="flex flex-col gap-2 items-center col-span-1">
       <span className="font-medium text-slate-500">{name}</span>
       <span className="font-semibold">{value}</span>
     </div>
@@ -45,50 +40,82 @@ function CurrentWeatherIndicator({
 }
 
 export default function CurrentWeatherSummary() {
-  const currentDate = React.useMemo(() => dateformatter.format(new Date()), []);
+  const currentDate = React.useMemo(
+    () => longDateFormatter.format(new Date()),
+    []
+  );
 
-  const { currentLocation } = useLocationStore();
-
-  const { data } = useQuery({
-    queryKey: ["currentWeather", currentLocation.lat, currentLocation.lon],
-    queryFn: async () => {
-      const response = await fetch(
-        `http://api.openweathermap.org/data/2.5/weather?lat=${currentLocation.lat}&lon=${currentLocation.lon}&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}&units=metric`
-      );
-      const data = await response.json();
-      return data as WeatherData;
-    },
-    enabled: !!currentLocation.lat && !!currentLocation.lon,
-    placeholderData: keepPreviousData,
-  });
+  const { data, isLoading } = useCurrentWeatherQuery();
 
   return (
     <Card className="w-full">
       <CardContent className="grid gap-4 p-4">
         <span>{currentDate}</span>
         <div className="grid grid-cols-2 gap-2">
-          <WeatherIcon
-            icon={data?.weather[0].icon ?? ""}
-            name={data?.weather[0].description ?? ""}
-          />
+          {isLoading ? (
+            <div className="grid place-content-center">
+              <Skeleton className="size-16 rounded-full" />
+            </div>
+          ) : (
+            <WeatherIcon
+              icon={data?.weather[0].icon ?? ""}
+              name={data?.weather[0].description ?? ""}
+            />
+          )}
           <CurrentWeatherCondition
-            temp={Math.round(data?.main.temp ?? 0)}
-            condition={data?.weather[0].description ?? ""}
+            temp={
+              isLoading ? (
+                <Skeleton className="h-12 w-24" />
+              ) : (
+                `${Math.round(data?.main.temp ?? 0)}°C`
+              )
+            }
+            condition={
+              isLoading ? (
+                <Skeleton className="h-7 w-28" />
+              ) : (
+                data?.weather[0].description ?? ""
+              )
+            }
           />
         </div>
       </CardContent>
       <CardFooter className="grid grid-cols-3 gap-4">
         <CurrentWeatherIndicator
           name="Humidity"
-          value={`${data?.main.humidity}%`}
+          value={
+            isLoading ? (
+              <Skeleton className="h-6 w-16" />
+            ) : (
+              `${data?.main.humidity}%`
+            )
+          }
         />
         <CurrentWeatherIndicator
           name="Winds"
-          value={`${data?.wind.speed} m/s`}
+          value={
+            isLoading ? (
+              <Skeleton className="h-6 w-16" />
+            ) : (
+              <>
+                <ArrowDown
+                  className="inline-block w-4 h-4"
+                  style={{ transform: `rotate(${data?.wind.deg ?? 0}deg)` }}
+                />{" "}
+                <span className="text-sm">{`${data?.wind.speed} m/s`}</span>
+              </>
+            )
+          }
         />
         <CurrentWeatherIndicator
           name="Visibility"
-          value={`${Math.round((data?.visibility || 0) / 1000)} km`}
+          value={
+            isLoading ? (
+              <Skeleton className="h-6 w-16" />
+            ) : (
+              `${Math.round((data?.visibility || 0) / 1000)} km`
+            )
+          }
         />
       </CardFooter>
     </Card>

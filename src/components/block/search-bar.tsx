@@ -5,43 +5,29 @@ import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRouter } from "next/navigation";
-import { useLocationStore } from "@/store/location";
-import { useDebounce } from "@uidotdev/usehooks";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useSearchLocationQuery } from "@/hooks/useSearchLocationQuery";
 import { cn } from "@/lib/utils";
+import { useLocationStore } from "@/store/location";
 import { LocationData } from "@/types/api";
+import { useDebounce } from "@uidotdev/usehooks";
+import { useRouter } from "next/navigation";
 
 export default function SearchBar() {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const debounceSearch = useDebounce(search, 500);
+  const debounceSearch = useDebounce(search, 200);
 
-  const { data, error } = useQuery({
-    queryKey: ["search", debounceSearch],
-    queryFn: async () => {
-      const response = await fetch(
-        `http://api.openweathermap.org/geo/1.0/direct?q=${debounceSearch}&limit=5&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}`
-      );
-      const data = await response.json();
-
-      if (!Array.isArray(data) || data.length === 0)
-        throw new Error("Invalid country or city");
-
-      return data as LocationData[];
-    },
-    retry: 1,
-    enabled: !!debounceSearch,
-    placeholderData: keepPreviousData,
-  });
+  const { data, error } = useSearchLocationQuery(debounceSearch);
 
   useEffect(() => {
     if (data) {
       setOpen(true);
+    } else {
+      setOpen(false);
     }
   }, [data]);
 
@@ -77,7 +63,7 @@ export default function SearchBar() {
         </PopoverTrigger>
         <PopoverContent
           className="w-[480px] p-2 bg-white outline-none"
-          sideOffset={0}
+          sideOffset={-20}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {data?.map((item, index) => (

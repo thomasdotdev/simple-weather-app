@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useLocationStore } from "@/store/location";
+import { LocationData } from "@/types/api";
 import { Search, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ComponentProps } from "react";
 
 function HistoryItem({ children, className, ...props }: ComponentProps<"div">) {
@@ -67,7 +69,16 @@ function EmptyUI() {
 
 export default function SearchHistory() {
   const { history, removeFromHistory, setCurrentLocation } = useLocationStore();
+
+  const router = useRouter();
+
+  function handleSearch(location: LocationData) {
+    router.push("/");
+    setCurrentLocation(location);
+  }
+
   const isEmpty = history.length === 0;
+
   return (
     <section className="flex flex-col w-full">
       <span className="font-medium">Search History</span>
@@ -78,9 +89,9 @@ export default function SearchHistory() {
           ) : (
             history.map((item, index) => (
               <HistoryItem key={index} className="justify-between">
-                <HistoryItemName>{item.name}</HistoryItemName>
+                <HistoryItemName>{`${item.name}, ${item.country}`}</HistoryItemName>
                 <HistoryItemActions>
-                  <HistoryItemAction onClick={() => setCurrentLocation(item)}>
+                  <HistoryItemAction onClick={() => handleSearch(item)}>
                     <Search className="size-4" />
                   </HistoryItemAction>
                   <HistoryItemAction onClick={() => removeFromHistory(item)}>

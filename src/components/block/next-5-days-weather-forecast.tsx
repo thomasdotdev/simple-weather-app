@@ -2,22 +2,11 @@
 
 import React from "react";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useNext5DaysWeatherForecastQuery } from "@/hooks/useNext5DaysWeatherForecastQuery";
+import { timeFormatter } from "@/utils/datetime";
 import { Card, CardContent } from "../ui/card";
-import { useLocationStore } from "@/store/location";
-import { Next5DayWeatherForecastData, WeatherData } from "@/types/api";
+import { Skeleton } from "../ui/skeleton";
 import WeatherIcon from "./weather-icon";
-
-const dateformatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  month: "long",
-});
-
-const timeFormatter = new Intl.DateTimeFormat("en-US", {
-  hour: "numeric",
-  minute: "numeric",
-  hourCycle: "h23",
-});
 
 function WeatherForcastRow({
   time,
@@ -46,88 +35,75 @@ function WeatherForcastRow({
   );
 }
 
+function LoadingUI() {
+  return (
+    <div className="flex flex-col">
+      <div className="p-4">
+        <Skeleton className="h-6 w-20" />
+      </div>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className="flex items-center w-full px-4">
+          <div className="text-sm font-semibold flex-none w-16">
+            <Skeleton className="h-6 w-10" />
+          </div>
+          <div className="flex w-full justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="grid place-content-center size-12">
+                <Skeleton className="size-10 rounded-full" />
+              </div>
+              <Skeleton className="w-20 h-6" />
+            </div>
+            <Skeleton className="w-32 h-6" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Next5DayWeatherForecast() {
-  const {
-    currentLocation: { lat, lon },
-  } = useLocationStore();
-
-  const { data } = useQuery({
-    queryKey: ["next5DayWeatherForecast", lat, lon],
-    queryFn: async () => {
-      const response = await fetch(
-        `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY}&units=metric`
-      );
-      const data = await response.json();
-      return data as Next5DayWeatherForecastData;
-    },
-    enabled: !!lat && !!lon,
-    placeholderData: keepPreviousData,
-  });
-
-  const list = React.useMemo(() => {
-    if (!data?.list) return [];
-
-    const listWithDateSeparated: Array<
-      | { type: "forcast"; payload: WeatherData }
-      | { type: "date"; payload: string }
-    > = [];
-
-    let lastDate = "";
-
-    data.list.forEach((item) => {
-      try {
-        const itemDate = dateformatter.format(new Date(item.dt * 1000));
-
-        if (lastDate !== itemDate) {
-          listWithDateSeparated.push({ type: "date", payload: itemDate });
-          lastDate = itemDate;
-        }
-
-        listWithDateSeparated.push({ type: "forcast", payload: item });
-      } catch (error) {
-        console.log("[DEBUG] Error parsing date", error);
-      }
-    });
-
-    return listWithDateSeparated;
-  }, [data]);
+  const { data, isLoading } = useNext5DaysWeatherForecastQuery();
 
   return (
     <section className="flex flex-col w-full pb-4">
       <span className="font-semibold py-2">5-day Forecast (3 Hours)</span>
       <Card>
-        <CardContent className="p-0">
-          <div className="flex flex-col">
-            {list.map(({ type, payload }, index) => {
-              if (type === "date") {
+        <CardContent className="p-0 pb-4">
+          {isLoading ? (
+            <LoadingUI />
+          ) : (
+            <div className="flex flex-col">
+              {data?.map(({ type, payload }, index) => {
+                if (type === "date") {
+                  return (
+                    <span
+                      key={index}
+                      className="text-muted-foreground font-medium p-4"
+                    >
+                      {payload}
+                    </span>
+                  );
+                }
                 return (
-                  <span
+                  <WeatherForcastRow
                     key={index}
-                    className="text-muted-foreground font-medium p-4"
-                  >
-                    {payload}
-                  </span>
+                    time={timeFormatter.format(new Date(payload.dt * 1000))}
+                    minTemp={`${payload.main?.temp_min}`}
+                    maxTemp={`${payload.main?.temp_max}`}
+                    condition={payload.weather[0]?.description ?? ""}
+                    icon={
+                      <WeatherIcon
+                        icon={payload.weather[0]?.icon ?? ""}
+                        name={payload.weather[0]?.description ?? ""}
+                        width={48}
+                        height={48}
+                      />
+                    }
+                  />
                 );
-              }
-              return (
-                <WeatherForcastRow
-                  key={index}
-                  time={timeFormatter.format(new Date(payload.dt * 1000))}
-                  minTemp={`${payload.main?.temp_min}`}
-                  maxTemp={`${payload.main?.temp_max}`}
-                  condition={payload.weather[0]?.description ?? ""}
-                  icon={
-                    <WeatherIcon
-                      icon={payload.weather[0]?.icon ?? ""}
-                      name={payload.weather[0]?.description ?? ""}
-                      width={48}
-                      height={48}
-                    />
-                  }
-                />
-              );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </section>
